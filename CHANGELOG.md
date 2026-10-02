@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.6 (2026-10-02)
+
+- HTML/XML/SVG response pretty-printer (`beautify.ts`), wired into CLI, TUI, and web UI output
+- Web UI revamp: single-screen layout with no page scroll, response Body + Headers side by side, dark/light theme toggle
+- Redesigned history sidebar: host+path rows, colored status, conditional clear button, empty states
+- Watch controls moved to the top bar next to Send; `Ctrl+Enter` / `Enter`-in-URL to send, shortcut keycap hint
+- Fixes: hidden-attribute override rendering empty panes, stale timing bar, invisible send spinner, double-send guard, theme-aware timing colors
+
 ## 1.0.0 (2026-10-02)
 
 - TypeScript CLI HTTP client: methods, headers, `--json`/`--data`, `--verbose`, `--timeout`, `--fail`, `--output`
