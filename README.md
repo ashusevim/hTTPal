@@ -1,7 +1,7 @@
 # HTTPal
 
 [![CI](https://github.com/ashusevim/HTTPal/actions/workflows/ci.yml/badge.svg)](https://github.com/ashusevim/HTTPal/actions/workflows/ci.yml)
-[![npm version](https://img.shields.io/npm/v/@codingashishdev/httpal.svg)](https://www.npmjs.com/package/@codingashishdev/httpal)
+[![npm version](https://img.shields.io/npm/v/@ashusevim/httpal.svg)](https://www.npmjs.com/package/@ashusevim/httpal)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](LICENSE)
 
 A lightweight, dependency-free command-line HTTP client built with TypeScript and Node 18+.
