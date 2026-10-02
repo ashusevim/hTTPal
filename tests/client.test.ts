@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import http from "node:http";
 import type { AddressInfo } from "node:net";
 import { sendRequest } from "../src/client.js";
-import { formatBody, statusLine } from "../src/format.js";
+import { formatBody, statusLine, renderTiming } from "../src/format.js";
 import type { CliOptions } from "../src/args.js";
 
 let server: http.Server;
@@ -54,6 +54,7 @@ function opts(overrides: Partial<CliOptions>): CliOptions {
     timeout: 5000,
     followRedirects: true,
     fail: false,
+    timing: false,
     ...overrides,
   };
 }
@@ -92,6 +93,14 @@ describe("sendRequest", () => {
     await expect(sendRequest(opts({ url: `${base}/slow`, timeout: 200 }))).rejects.toThrow(/timed out/);
   });
 
+  it("captures timing phases", async () => {
+    const r = await sendRequest(opts({}));
+    expect(r.timing).not.toBeNull();
+    expect(r.timing!.ttfb).toBeGreaterThanOrEqual(0);
+    expect(r.timing!.download).toBeGreaterThanOrEqual(0);
+    expect(r.timing!.total).toBeGreaterThanOrEqual(0);
+  });
+
   it("wraps connection errors", async () => {
     await expect(sendRequest(opts({ url: "http://127.0.0.1:1/" }))).rejects.toThrow(/Request failed/);
   });
@@ -99,24 +108,48 @@ describe("sendRequest", () => {
 
 describe("formatBody", () => {
   it("pretty-prints JSON", () => {
-    const out = formatBody({ status: 200, statusText: "OK", headers: {}, body: '{"a":1}', contentType: "application/json", durationMs: 1, redirected: false });
+    const out = formatBody({ status: 200, statusText: "OK", headers: {}, body: '{"a":1}', contentType: "application/json", durationMs: 1, redirected: false, timing: null });
     expect(out).toBe('{\n  "a": 1\n}');
   });
 
   it("passes through non-JSON", () => {
-    const out = formatBody({ status: 200, statusText: "OK", headers: {}, body: "plain", contentType: "text/plain", durationMs: 1, redirected: false });
+    const out = formatBody({ status: 200, statusText: "OK", headers: {}, body: "plain", contentType: "text/plain", durationMs: 1, redirected: false, timing: null });
     expect(out).toBe("plain");
   });
 
   it("falls back to raw on invalid JSON content-type", () => {
-    const out = formatBody({ status: 200, statusText: "OK", headers: {}, body: "not json", contentType: "application/json", durationMs: 1, redirected: false });
+    const out = formatBody({ status: 200, statusText: "OK", headers: {}, body: "not json", contentType: "application/json", durationMs: 1, redirected: false, timing: null });
     expect(out).toBe("not json");
+  });
+});
+
+describe("renderTiming", () => {
+  it("renders all phases with bars", () => {
+    const out = renderTiming({
+      status: 200, statusText: "OK", headers: {}, body: "", contentType: "",
+      durationMs: 100, redirected: false,
+      timing: { dns: 1, connect: 10, secure: 5, ttfb: 40, download: 9, total: 60 },
+    });
+    expect(out).toContain("DNS lookup");
+    expect(out).toContain("TLS handshake");
+    expect(out).toContain("Wait (TTFB)");
+    expect(out).toContain("Download");
+    expect(out).toContain("total 60ms");
+    expect(out).toContain("█");
+  });
+
+  it("handles missing timing", () => {
+    const out = renderTiming({
+      status: 200, statusText: "OK", headers: {}, body: "", contentType: "",
+      durationMs: 1, redirected: false, timing: null,
+    });
+    expect(out).toContain("unavailable");
   });
 });
 
 describe("statusLine", () => {
   it("formats status and duration", () => {
-    const line = statusLine({ status: 404, statusText: "Not Found", headers: {}, body: "", contentType: "", durationMs: 12, redirected: false });
+    const line = statusLine({ status: 404, statusText: "Not Found", headers: {}, body: "", contentType: "", durationMs: 12, redirected: false, timing: null });
     expect(line).toContain("404");
     expect(line).toContain("Not Found");
     expect(line).toContain("12ms");

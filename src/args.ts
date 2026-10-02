@@ -9,6 +9,7 @@ export interface CliOptions {
   output?: string;
   followRedirects: boolean;
   fail: boolean;
+  timing: boolean;
 }
 
 export interface ParsedArgs {
@@ -31,6 +32,7 @@ Options:
   -i, --include           Include response headers in the output
   -t, --timeout <ms>      Request timeout in milliseconds (default: 30000)
   -o, --output <file>     Write the response body to a file
+      --timing            Show the timing waterfall (DNS, connect, TLS, TTFB, download)
   -L, --no-follow         Do not follow redirects (redirects are followed by default)
       --fail              Exit with code 1 on HTTP error status (>= 400)
   -h, --help              Show this help
@@ -72,6 +74,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
   let output: string | undefined;
   let followRedirects = true;
   let fail = false;
+  let timing = false;
   const headers: Record<string, string> = {};
   let url: string | undefined;
 
@@ -135,6 +138,9 @@ export function parseArgs(argv: string[]): ParsedArgs {
         case "--fail":
           fail = true;
           break;
+        case "--timing":
+          timing = true;
+          break;
         default:
           if (arg.startsWith("--method=")) method = arg.slice(9).toUpperCase();
           else if (arg.startsWith("--header=")) {
@@ -178,6 +184,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
     output,
     followRedirects,
     fail,
+    timing,
   };
   return result;
 }

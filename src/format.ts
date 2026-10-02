@@ -1,6 +1,25 @@
 import type { HttpResult } from "./client.js";
 import type { CliOptions } from "./args.js";
 
+/** Render a dev-tools-style timing waterfall. */
+export function renderTiming(result: HttpResult, width = 30): string {
+  const t = result.timing;
+  if (!t) return "Timing: unavailable";
+  const phases: Array<[string, number]> = [
+    ["DNS lookup", t.dns],
+    ["TCP connect", t.connect - t.secure],
+    ["TLS handshake", t.secure],
+    ["Wait (TTFB)", t.ttfb],
+    ["Download", t.download],
+  ];
+  const max = Math.max(...phases.map(([, v]) => v), 0.1);
+  const lines = phases.map(([label, value]) => {
+    const bar = "█".repeat(Math.max(1, Math.round((value / max) * width)));
+    return `  ${label.padEnd(13)} ${String(value).padStart(7)}ms  ${bar}`;
+  });
+  return `Timing (total ${t.total}ms):\n${lines.join("\n")}`;
+}
+
 const isJson = (contentType: string) => /\bjson\b/i.test(contentType);
 
 export function formatBody(result: HttpResult, maxLines = 0): string {
@@ -70,6 +89,9 @@ export function renderResult(result: HttpResult, options: CliOptions): string {
   parts.push("");
   if (!options.output) {
     parts.push(formatBody(result));
+  }
+  if (options.timing) {
+    parts.push("", renderTiming(result));
   }
   return parts.join("\n");
 }

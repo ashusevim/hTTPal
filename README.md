@@ -9,6 +9,7 @@ A lightweight, dependency-free command-line HTTP client built with TypeScript an
 - Request bodies from the CLI (`-d`) or JSON (`--json`, auto-sets `Content-Type`)
 - Pretty-printed JSON responses, plain-text passthrough for everything else
 - Status line with color, timing in milliseconds, redirect detection
+- `--timing` renders a dev-tools-style waterfall: DNS, TCP, TLS, TTFB, download
 - `--verbose` request/response headers, `--include` for response headers only
 - `--timeout`, `--no-follow`, `--fail`, `--output` for saving bodies to disk
 - Sensible exit codes: `0` success, `1` request/HTTP error, `2` bad arguments
@@ -47,6 +48,17 @@ HTTP 200 OK (183ms)
   "id": 1342004,
   ...
 }
+```
+
+### `--timing` waterfall
+
+```
+Timing (total 17.9ms):
+  DNS lookup          0ms  █
+  TCP connect         0ms  █
+  TLS handshake       0ms  █
+  Wait (TTFB)       5.3ms  ██████████████████████████████
+  Download          4.8ms  ███████████████████████████
 ```
 
 ## Development

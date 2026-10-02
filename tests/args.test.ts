@@ -86,6 +86,12 @@ describe("parseArgs", () => {
     expect(r.options?.followRedirects).toBe(false);
   });
 
+  it("--timing enables timing waterfall", () => {
+    const r = parseArgs([...base, "--timing", "https://example.com"]);
+    expect(r.options?.timing).toBe(true);
+    expect(parseArgs([...base, "https://example.com"]).options?.timing).toBe(false);
+  });
+
   it("handles --help and --version without URL", () => {
     expect(parseArgs([...base, "--help"]).help).toBe(true);
     expect(parseArgs([...base, "--version"]).version).toBe(true);

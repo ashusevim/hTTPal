@@ -55,6 +55,13 @@ describe("CLI", () => {
     expect(r.stderr).toContain("Invalid URL");
   });
 
+  it("--timing prints the waterfall", async () => {
+    const r = await cli(["--timing", base]);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain("Timing");
+    expect(r.stdout).toContain("TTFB");
+  });
+
   it("--fail exits 1 on 404", async () => {
     const s = http.createServer((_req, res) => res.writeHead(404).end());
     await new Promise<void>((r) => s.listen(0, r));
