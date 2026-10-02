@@ -128,6 +128,25 @@ describe("CLI", () => {
       });
       const jerr = await err.json();
       expect(jerr.error).toMatch(/Request failed/);
+
+      process.env["HTTPAL_SNAPSHOT_DIR"] = fs.mkdtempSync(path.join(os.tmpdir(), "httpal-ui-snap-"));
+      try {
+        const save = await fetch(`http://127.0.0.1:${addr.port}/api/snapshot`, {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ mode: "save", url: base, method: "GET" }),
+        });
+        expect((await save.json()).ok).toBe(true);
+        const diff = await fetch(`http://127.0.0.1:${addr.port}/api/snapshot`, {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ mode: "diff", url: base, method: "GET" }),
+        });
+        const jd = await diff.json();
+        expect(jd.hasSnapshot).toBe(true);
+        expect(jd.changed).toBe(false);
+        expect(jd.diff).toBe("(no changes)");
+      } finally {
+        delete process.env["HTTPAL_SNAPSHOT_DIR"];
+      }
     } finally {
       ui.close();
     }

@@ -114,6 +114,16 @@ export const PAGE = `<!doctype html>
   <section id="result" hidden>
     <h2 id="status" style="margin:0 0 .5rem"></h2>
     <div id="timingWrap"></div>
+    <div class="row" style="margin:.5rem 0;gap:.4rem;align-items:center">
+      <button id="saveSnap" style="padding:.3rem .7rem;font-size:.78rem">Save snapshot</button>
+      <button id="diffSnap" style="padding:.3rem .7rem;font-size:.78rem;background:var(--muted);color:var(--fg);border:1px solid var(--border)">Diff vs snapshot</button>
+      <span id="watchWrap">
+        <input id="watchMs" type="number" min="200" step="100" value="2000" style="width:90px;padding:.3rem .5rem;font-size:.78rem" aria-label="Watch interval ms">
+        <button id="watchToggle" style="padding:.3rem .7rem;font-size:.78rem;background:var(--muted);color:var(--fg);border:1px solid var(--border)">Watch</button>
+      </span>
+      <span id="snapMsg" style="font-size:.78rem;color:var(--muted-fg)"></span>
+    </div>
+    <div id="snapOut" hidden><pre id="snapPre"></pre></div>
     <div class="tabs" role="tablist" style="margin-top:1rem">
       <button class="tab active" data-rtab="rbody">Body</button>
       <button class="tab" data-rtab="rheaders">Headers</button>
@@ -226,6 +236,54 @@ async function send() {
 }
 $('send').onclick = send;
 document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') send(); });
+
+/* Snapshot save / diff */
+function currentRequestBody() {
+  const headers = {};
+  for (const line of $('headers').value.split('\\n')) {
+    const i = line.indexOf(':');
+    if (i > 0) headers[line.slice(0, i).trim()] = line.slice(i + 1).trim();
+  }
+  return { url: $('url').value + paramsQuery(), method: $('method').value, headers, body: $('body').value || undefined };
+}
+$('saveSnap').onclick = async () => {
+  $('snapMsg').textContent = 'Saving...';
+  const r = await fetch('/api/snapshot', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ mode: 'save', ...currentRequestBody() }) });
+  const j = await r.json();
+  $('snapMsg').textContent = j.error ? j.error : ('Saved snapshot (HTTP ' + j.status + ') -> ' + j.file);
+  $('snapOut').hidden = true;
+};
+$('diffSnap').onclick = async () => {
+  $('snapMsg').textContent = 'Comparing...';
+  const r = await fetch('/api/snapshot', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ mode: 'diff', ...currentRequestBody() }) });
+  const j = await r.json();
+  if (j.error) { $('snapMsg').textContent = j.error; return; }
+  if (!j.hasSnapshot) { $('snapMsg').textContent = 'No snapshot saved yet.'; return; }
+  $('snapMsg').textContent = j.changed ? 'Changed since snapshot (status ' + j.previousStatus + ' -> ' + j.status + ')' : 'No changes vs snapshot.';
+  $('snapOut').hidden = false;
+  $('snapPre').textContent = j.diff;
+};
+
+/* Watch mode */
+let watchTimer = null;
+$('watchToggle').onclick = () => {
+  if (watchTimer) {
+    clearInterval(watchTimer); watchTimer = null;
+    $('watchToggle').textContent = 'Watch';
+    return;
+  }
+  const ms = Math.max(Number($('watchMs').value) || 2000, 200);
+  $('watchToggle').textContent = 'Stop';
+  let prev = null;
+  watchTimer = setInterval(async () => {
+    const r = await fetch('/api/request', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(currentRequestBody()) });
+    const j = await r.json();
+    if (j.error) return;
+    const cls = j.status < 300 ? 'ok' : j.status < 400 ? 'warn' : 'err';
+    $('status').innerHTML = '<span class="pill ' + cls + '">HTTP ' + j.status + ' ' + j.statusText + '</span> <span style="color:var(--muted-fg);font-size:.8rem">' + j.durationMs + 'ms' + (prev !== null && prev !== j.body ? ' · changed' : prev === j.body ? ' · no change' : '') + '</span>';
+    prev = j.body;
+  }, ms);
+};
 </script>
 </body>
 </html>`;
