@@ -1,5 +1,5 @@
 {
-  "name": "@ashusevim/httpal",
+  "name": "@codingashishdev/httpal",
   "version": "1.0.0",
   "description": "A lightweight and easy-to-use command-line HTTP client for making requests and inspecting responses.",
   "main": "dist/index.js",
