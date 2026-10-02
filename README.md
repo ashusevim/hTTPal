@@ -8,6 +8,8 @@ A lightweight, dependency-free command-line HTTP client built with TypeScript an
 
 ![HTTPal Web UI](docs/screenshot.png)
 
+![HTTPal demo](docs/demo.gif)
+
 ## Features
 
 - GET, POST, PUT, DELETE, and any other HTTP method via `-X`
