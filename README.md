@@ -1,6 +1,6 @@
 # HTTPal
 
-[![CI](https://github.com/ashusevim/HTTPal/actions/workflows/ci.yml/badge.svg)](https://github.com/ashusevim/HTTPal/actions/workflows/ci.yml)
+[![CI](https://github.com/ashusevim/httpal/actions/workflows/ci.yml/badge.svg)](https://github.com/ashusevim/httpal/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/@ashusevim/httpal.svg)](https://www.npmjs.com/package/@ashusevim/httpal)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](LICENSE)
 
@@ -36,7 +36,7 @@ npx @ashusevim/httpal https://api.github.com/users/google
 Requires Node.js 18 or newer. For development, clone the repo instead:
 
 ```bash
-git clone https://github.com/ashusevim/HTTPal.git
+git clone https://github.com/ashusevim/httpal.git
 cd HTTPal
 npm install
 npm run build
