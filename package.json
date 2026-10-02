@@ -1,6 +1,6 @@
 {
   "name": "@ashusevim/httpal",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A lightweight and easy-to-use command-line HTTP client for making requests and inspecting responses.",
   "main": "dist/index.js",
   "bin": {
