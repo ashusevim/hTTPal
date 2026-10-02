@@ -1,37 +1,62 @@
-import fs from "fs"
-const url = process.argv[2];
+#!/usr/bin/env node
+import fs from "node:fs";
+import { parseArgs, getHelp } from "./args.js";
+import { sendRequest } from "./client.js";
+import { renderResult } from "./format.js";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-if(!url){
-    console.error("Usage: HTTPal <url>")
-    process.exit(1)
+function getVersion(): string {
+  try {
+    const here = path.dirname(fileURLToPath(import.meta.url));
+    const pkg = JSON.parse(readFileSync(path.join(here, "..", "package.json"), "utf8"));
+    return pkg.version ?? "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
 }
 
-async function fetchData(url: string){
-    try {
-        const response = await fetch(url)
-        if(!response.ok){
-            console.error(response.status + " " + response.statusText)
-            const body = await response.text()
-            console.error("Response body: ", body)
-            process.exit(1)
-        }  
-        const contentType = response.headers.get('content-type')
-        if(contentType && contentType.includes('application/json')){
-            return response.json()
-        }
-        
-        return response.text()
-    } catch (error) {
-        if(error instanceof Error){
-            console.error('Request error: ', error.message);
-        }
-        else{
-            console.error('Unknown error occured', error);
-        }
+async function main(): Promise<number> {
+  const parsed = parseArgs(process.argv);
+  if (parsed.help) {
+    console.log(getHelp());
+    return 0;
+  }
+  if (parsed.version) {
+    console.log(getVersion());
+    return 0;
+  }
+  if (parsed.error || !parsed.options) {
+    console.error(parsed.error ?? "Invalid arguments");
+    return 2;
+  }
+
+  try {
+    new URL(parsed.options.url);
+  } catch {
+    console.error(`Invalid URL: ${parsed.options.url}`);
+    return 2;
+  }
+
+  try {
+    const result = await sendRequest(parsed.options);
+    if (parsed.options.output) {
+      fs.writeFileSync(parsed.options.output, result.body);
+      console.log(`Saved ${result.body.length} bytes to ${parsed.options.output}`);
     }
+    console.log(renderResult(result, parsed.options));
+    if (parsed.options.fail && result.status >= 400) return 1;
+    return 0;
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    return 1;
+  }
 }
 
-(async function(){
-    const data = await fetchData(url)
-    console.log(JSON.stringify(data))
-})()
+main()
+  .then((code) => process.exit(code))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
