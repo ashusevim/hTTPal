@@ -4,75 +4,48 @@
 [![npm version](https://img.shields.io/npm/v/@ashusevim/httpal.svg)](https://www.npmjs.com/package/@ashusevim/httpal)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](LICENSE)
 
-A lightweight, dependency-free command-line HTTP client built with TypeScript and Node 18+.
+A curl-like HTTP client that fits in a single npm package: zero runtime dependencies, a developer-tools timing waterfall, watch mode with live diffs, snapshot regression checks, and a built-in web UI. Written in strict TypeScript on Node 18+.
 
 ![HTTPal Web UI](docs/screenshot.png)
-
 ![HTTPal demo](docs/demo.gif)
 
-## Features
-
-- GET, POST, PUT, DELETE, and any other HTTP method via `-X`
-- Repeatable request headers (`-H`)
-- Request bodies from the CLI (`-d`) or JSON (`--json`, auto-sets `Content-Type`)
-- Pretty-printed JSON responses, plain-text passthrough for everything else
-- Status line with color, timing in milliseconds, redirect detection
-- `--timing` renders a dev-tools-style waterfall: DNS, TCP, TLS, TTFB, download
-- `--verbose` request/response headers, `--include` for response headers only
-- `--watch <ms>` re-runs the request and shows what changed since the previous run
-- `--snapshot save|diff` records a baseline and diffs future runs (JSON-aware key diffs)
-- Response bodies are sanitized by default (ANSI/control chars stripped) — `--raw` to disable
-- `httpal ui` local web UI (request builder + response viewer with timing bar), `httpal tui` interactive mode
-- `--timeout`, `--no-follow`, `--fail`, `--output` for saving bodies to disk
-- Sensible exit codes: `0` success, `1` request/HTTP error, `2` bad arguments
-- No runtime dependencies — just `node:fetch` under the hood
-
-## Installation
+## 60-second start
 
 ```bash
 npm install -g @ashusevim/httpal
-# or run once without installing:
-npx @ashusevim/httpal https://api.github.com/users/google
+httpal https://api.github.com/users/google
 ```
 
-Requires Node.js 18 or newer. For development, clone the repo instead:
+> Don't want to install? `npx @ashusevim/httpal https://api.github.com/users/google`
 
-```bash
-git clone https://github.com/ashusevim/httpal.git
-cd HTTPal
-npm install
-npm run build
-```
+## Why HTTPal
+
+|                        | curl | HTTPie | xh | **HTTPal** |
+|------------------------|:----:|:------:|:--:|:----------:|
+| JSON pretty-print      |  ✗   |   ✓    |  ✓ |    ✓       |
+| Timing waterfall       | raw flags | ✗ | ✗ | **`--timing`** |
+| Watch mode + live diff |  ✗   |   ✗    |  ✗ | **`--watch`** |
+| Snapshot regression    |  ✗   |   ✗    |  ✗ | **`--snapshot`** |
+| Built-in web UI        |  ✗   |   ✗    |  ✗ | **`httpal ui`** |
+| Sanitizes output by default | ✗ | ✗ | ✗ | ✓ |
+| Runtime dependencies   | —    | Python | Rust | **none (pure Node)** |
 
 ## Usage
 
 ```bash
-httpal https://api.github.com/users/google
-httpal -X POST https://example.com/api --json '{"name":"httpal"}'
-httpal -v -H "Accept: application/json" https://httpbin.org/status/200
-httpal --fail -o user.json https://example.com/user/42
-httpal --watch 2000 https://httpbin.org/time    # re-run, show what changed
-httpal --snapshot save https://example.com      # record baseline
-httpal --snapshot diff https://example.com      # what changed since baseline?
-httpal ui --port 4242                           # web UI at http://localhost:4242
-httpal tui                                      # interactive terminal mode
+httpal <url>                                  # GET
+httpal -X POST --json '{"a":1}' <url>         # POST JSON (Content-Type set for you)
+httpal -v -H "Accept: application/json" <url> # verbose request/response headers
+httpal --fail -o user.json <url>              # exit 1 on HTTP >= 400, save body
+httpal --timing <url>                         # DNS/TCP/TLS/TTFB/download waterfall
+httpal --watch 2000 <url>                     # re-run, show only what changed
+httpal --snapshot save <url>                  # record baseline
+httpal --snapshot diff <url>                  # exit 1 if the response drifted
+httpal ui --port 4242                         # web UI at http://localhost:4242
+httpal tui                                    # interactive terminal mode
 ```
 
-Run `httpal --help` for the full option list.
-
-### Output example
-
-```
-HTTP 200 OK (183ms)
-
-{
-  "login": "google",
-  "id": 1342004,
-  ...
-}
-```
-
-### `--timing` waterfall
+### Timing waterfall
 
 ```
 Timing (total 17.9ms):
@@ -83,49 +56,76 @@ Timing (total 17.9ms):
   Download          4.8ms  ███████████████████████████
 ```
 
+### Snapshot diff example
+
+```
+--- diff vs snapshot from 2026-10-02T08:00:00.000Z ---
+~ login: "google" -> "google-corp"
++ verified: true
+```
+
+## Options
+
+| Flag | Description |
+|------|-------------|
+| `-X, --method <m>` | HTTP method (default `GET`, `POST` when a body is set) |
+| `-H, --header <h>` | Header, e.g. `-H "Accept: application/json"` (repeatable) |
+| `-d, --data <body>` | Request body, sent as-is |
+| `--json <body>` | Request body; sets `Content-Type: application/json` if unset |
+| `-v, --verbose` | Print request and response headers |
+| `-i, --include` | Include response headers in output |
+| `-t, --timeout <ms>` | Request timeout (default 30000) |
+| `-o, --output <file>` | Write body to a file |
+| `--timing` | Timing waterfall |
+| `--watch <ms>` | Re-run every N ms, print diff |
+| `--snapshot <save\|diff>` | Baseline record / compare |
+| `--raw` | Disable sanitization of response bodies |
+| `-L, --no-follow` | Do not follow redirects |
+| `--fail` | Exit 1 on HTTP status >= 400 |
+| `--target <url>` | URL (alternative to positional arg) |
+| `-h, --help` / `--version` | Help / version |
+
+Exit codes: `0` success · `1` request/HTTP error · `2` bad arguments.
+
+## Docker
+
+```bash
+docker build -t httpal .
+docker run --rm httpal https://api.github.com/users/google
+```
+
 ## Development
 
 ```bash
-npm run build       # compile TypeScript to dist/
-npm test            # run the vitest suite (unit + CLI end-to-end)
-npm run typecheck   # strict type checking, no emit
-npm start -- <url>  # run the built CLI
+git clone https://github.com/ashusevim/httpal.git
+cd httpal
+npm install
+npm run build
+npm test          # vitest: unit, client integration, CLI end-to-end, UI server
+npm run typecheck
 ```
-
-Project layout:
 
 ```
 src/
-  args.ts      argument parsing (no external deps)
-  client.ts    fetch wrapper with timeout + error normalization
-  format.ts    response rendering (status line, headers, JSON pretty-print)
-  diff.ts      JSON-aware structural diff for --watch and --snapshot
-  sanitize.ts  ANSI/control-char stripping for untrusted bodies
-  snapshot.ts  baseline persistence
-  ui-server.ts local web UI (zero framework, embedded page)
-  tui.ts       interactive terminal mode
-  index.ts     CLI entry point
-tests/         vitest suites: unit, client integration, CLI end-to-end, UI server
+  args.ts       argument parsing (no external deps)
+  client.ts     fetch wrapper: timeout, redirects, error normalization, timing
+  format.ts     status line, headers, JSON pretty-print, waterfall render
+  diff.ts       JSON-aware structural diff (--watch, --snapshot)
+  sanitize.ts   ANSI/control-char stripping for untrusted bodies
+  snapshot.ts   baseline persistence
+  ui-server.ts  local web UI server
+  ui-page.ts    embedded single-page UI
+  tui.ts        interactive terminal mode
+  index.ts      CLI entry point
+tests/          vitest suites
 ```
-
-## Why HTTPal
-
-|             | curl | HTTPie | xh | HTTPal |
-|-------------|:----:|:------:|:--:|:------:|
-| JSON pretty-print | ✗ | ✓ | ✓ | ✓ |
-| Timing waterfall | raw flags | ✗ | ✗ | **`--timing`** |
-| Watch mode + diff | ✗ | ✗ | ✗ | **`--watch`** |
-| Snapshot regression | ✗ | ✗ | ✗ | **`--snapshot`** |
-| Web UI | ✗ | ✗ | ✗ | **`httpal ui`** |
-| Sanitizes output by default | ✗ | ✗ | ✗ | ✓ |
-| Runtime dependencies | — | Python | Rust | **none (pure Node)** |
 
 ## Roadmap
 
 - [ ] Cookie jar support
 - [ ] Config file (`~/.httpalrc`) for default headers
 - [ ] Shell completions
-- [ ] Response history / pretty diff between runs
+- [ ] OAuth helper flows
 
 ## License
 
