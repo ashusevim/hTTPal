@@ -11,6 +11,9 @@ A lightweight, dependency-free command-line HTTP client built with TypeScript an
 - Status line with color, timing in milliseconds, redirect detection
 - `--timing` renders a dev-tools-style waterfall: DNS, TCP, TLS, TTFB, download
 - `--verbose` request/response headers, `--include` for response headers only
+- `--watch <ms>` re-runs the request and shows what changed since the previous run
+- `--snapshot save|diff` records a baseline and diffs future runs (JSON-aware key diffs)
+- Response bodies are sanitized by default (ANSI/control chars stripped) — `--raw` to disable
 - `--timeout`, `--no-follow`, `--fail`, `--output` for saving bodies to disk
 - Sensible exit codes: `0` success, `1` request/HTTP error, `2` bad arguments
 - No runtime dependencies — just `node:fetch` under the hood
@@ -34,6 +37,9 @@ httpal https://api.github.com/users/google
 httpal -X POST https://example.com/api --json '{"name":"httpal"}'
 httpal -v -H "Accept: application/json" https://httpbin.org/status/200
 httpal --fail -o user.json https://example.com/user/42
+httpal --watch 2000 https://httpbin.org/time    # re-run, show what changed
+httpal --snapshot save https://example.com      # record baseline
+httpal --snapshot diff https://example.com      # what changed since baseline?
 ```
 
 Run `httpal --help` for the full option list.

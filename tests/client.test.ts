@@ -55,6 +55,9 @@ function opts(overrides: Partial<CliOptions>): CliOptions {
     followRedirects: true,
     fail: false,
     timing: false,
+    sanitize: true,
+    watchMs: 0,
+    snapshot: "off" as const,
     ...overrides,
   };
 }

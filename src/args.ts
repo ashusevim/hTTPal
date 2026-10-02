@@ -10,6 +10,12 @@ export interface CliOptions {
   followRedirects: boolean;
   fail: boolean;
   timing: boolean;
+  /** Sanitize untrusted response bodies before printing (default true). */
+  sanitize: boolean;
+  /** Re-run the request every N ms and show what changed. 0 = off. */
+  watchMs: number;
+  /** Snapshot mode: off, save (record), or diff (compare to saved). */
+  snapshot: "off" | "save" | "diff";
 }
 
 export interface ParsedArgs {
@@ -33,6 +39,9 @@ Options:
   -t, --timeout <ms>      Request timeout in milliseconds (default: 30000)
   -o, --output <file>     Write the response body to a file
       --timing            Show the timing waterfall (DNS, connect, TLS, TTFB, download)
+      --watch <ms>        Re-run the request every N ms and show what changed
+      --snapshot <mode>   'save' records the response, 'diff' compares against it
+      --raw               Print the raw response body (no ANSI/control sanitization)
   -L, --no-follow         Do not follow redirects (redirects are followed by default)
       --fail              Exit with code 1 on HTTP error status (>= 400)
   -h, --help              Show this help
@@ -75,6 +84,9 @@ export function parseArgs(argv: string[]): ParsedArgs {
   let followRedirects = true;
   let fail = false;
   let timing = false;
+  let sanitize = true;
+  let watchMs = 0;
+  let snapshot: "off" | "save" | "diff" = "off";
   const headers: Record<string, string> = {};
   let url: string | undefined;
   const setUrl = (u: string) => {
@@ -151,6 +163,24 @@ export function parseArgs(argv: string[]): ParsedArgs {
           if (err) return { ...result, error: err.error };
           break;
         }
+        case "--raw":
+          sanitize = false;
+          break;
+        case "--watch": {
+          const raw = next();
+          const n = Number(raw);
+          if (!Number.isFinite(n) || n < 100)
+            return { ...result, error: `Invalid watch interval: ${raw} (min 100ms)` };
+          watchMs = n;
+          break;
+        }
+        case "--snapshot": {
+          const mode = next();
+          if (mode !== "save" && mode !== "diff")
+            return { ...result, error: `--snapshot expects 'save' or 'diff', got: ${mode}` };
+          snapshot = mode;
+          break;
+        }
         default:
           if (arg.startsWith("--method=")) method = arg.slice(9).toUpperCase();
           else if (arg.startsWith("--header=")) {
@@ -204,6 +234,9 @@ export function parseArgs(argv: string[]): ParsedArgs {
     followRedirects,
     fail,
     timing,
+    sanitize,
+    watchMs,
+    snapshot,
   };
   return result;
 }

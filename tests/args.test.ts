@@ -104,6 +104,18 @@ describe("parseArgs", () => {
     expect(r.error).toMatch(/--target/);
   });
 
+  it("parses --raw, --watch, --snapshot", () => {
+    const r = parseArgs([...base, "--raw", "--watch", "500", "--snapshot", "save", "https://example.com"]);
+    expect(r.options?.sanitize).toBe(false);
+    expect(r.options?.watchMs).toBe(500);
+    expect(r.options?.snapshot).toBe("save");
+  });
+
+  it("rejects bad watch interval and snapshot mode", () => {
+    expect(parseArgs([...base, "--watch", "10", "https://example.com"]).error).toMatch(/Invalid watch/);
+    expect(parseArgs([...base, "--snapshot", "bogus", "https://example.com"]).error).toMatch(/snapshot/);
+  });
+
   it("handles --help and --version without URL", () => {
     expect(parseArgs([...base, "--help"]).help).toBe(true);
     expect(parseArgs([...base, "--version"]).version).toBe(true);

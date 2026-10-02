@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import http from "node:http";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import type { AddressInfo } from "node:net";
@@ -68,6 +71,34 @@ describe("CLI", () => {
     const port = (s.address() as AddressInfo).port;
     const r = await cli(["--fail", `http://127.0.0.1:${port}/`]);
     expect(r.code).toBe(1);
+    await new Promise((r2) => s.close(r2));
+  });
+
+  it("snapshot save then diff reports changes", async () => {
+    let n = 0;
+    const s = http.createServer((_req, res) => {
+      n++;
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(`{"n":${n}}`);
+    });
+    await new Promise<void>((r) => s.listen(0, r));
+    const port = (s.address() as AddressInfo).port;
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "httpal-cli-snap-"));
+    const env = { ...process.env, HTTPAL_SNAPSHOT_DIR: dir };
+    const { execFile } = await import("node:child_process");
+    const exec = (args: string[]) =>
+      new Promise<{ code: number; stdout: string }>((resolve) => {
+        execFile("node", ["dist/index.js", ...args], { env }, (err, stdout) => {
+          resolve({ code: err ? (err as any).code ?? 1 : 0, stdout: stdout ?? "" });
+        });
+      });
+    const target = `http://127.0.0.1:${port}/x`;
+    const save = await exec(["--snapshot", "save", target]);
+    expect(save.code).toBe(0);
+    expect(save.stdout).toContain("Snapshot saved");
+    const diff = await exec(["--snapshot", "diff", target]);
+    expect(diff.code).toBe(1);
+    expect(diff.stdout).toContain("diff vs snapshot");
     await new Promise((r2) => s.close(r2));
   });
 });

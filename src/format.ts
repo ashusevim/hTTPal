@@ -1,5 +1,6 @@
 import type { HttpResult } from "./client.js";
 import type { CliOptions } from "./args.js";
+import { sanitizeBody } from "./sanitize.js";
 
 /** Render a dev-tools-style timing waterfall. */
 export function renderTiming(result: HttpResult, width = 30): string {
@@ -22,8 +23,8 @@ export function renderTiming(result: HttpResult, width = 30): string {
 
 const isJson = (contentType: string) => /\bjson\b/i.test(contentType);
 
-export function formatBody(result: HttpResult, maxLines = 0): string {
-  const trimmed = result.body;
+export function formatBody(result: HttpResult, maxLines = 0, sanitize = true): string {
+  const trimmed = sanitize ? sanitizeBody(result.body) : result.body;
   let out: string;
   if (isJson(result.contentType)) {
     try {
@@ -88,7 +89,7 @@ export function renderResult(result: HttpResult, options: CliOptions): string {
   }
   parts.push("");
   if (!options.output) {
-    parts.push(formatBody(result));
+    parts.push(formatBody(result, 0, options.sanitize));
   }
   if (options.timing) {
     parts.push("", renderTiming(result));
