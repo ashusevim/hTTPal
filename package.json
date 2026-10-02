@@ -6,10 +6,20 @@
   "bin": {
     "httpal": "dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "tsc",
-    "start": "node .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node dist/index.js",
+    "dev": "node --experimental-strip-types src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [
     "http",
@@ -23,8 +33,17 @@
   "author": "Ashish",
   "license": "ISC",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ashusevim/HTTPal.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ashusevim/HTTPal/issues"
+  },
+  "homepage": "https://github.com/ashusevim/HTTPal#readme"
   "devDependencies": {
     "@types/node": "^24.0.10",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^5.0.3"
   }
 }
