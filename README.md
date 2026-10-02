@@ -28,14 +28,19 @@ A lightweight, dependency-free command-line HTTP client built with TypeScript an
 ## Installation
 
 ```bash
-git clone https://github.com/ashusevim/HTTPal.git
-cd httpal
-npm install
-npm run build
-npm link        # optional: puts `httpal` on your PATH
+npm install -g @ashusevim/httpal
+# or run once without installing:
+npx @ashusevim/httpal https://api.github.com/users/google
 ```
 
-Requires Node.js 18 or newer.
+Requires Node.js 18 or newer. For development, clone the repo instead:
+
+```bash
+git clone https://github.com/ashusevim/HTTPal.git
+cd HTTPal
+npm install
+npm run build
+```
 
 ## Usage
 
