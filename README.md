@@ -7,7 +7,7 @@
 A curl-like HTTP client that fits in a single npm package: zero runtime dependencies, a developer-tools timing waterfall, watch mode with live diffs, snapshot regression checks, and a built-in web UI. Written in strict TypeScript on Node 18+.
 
 ![HTTPal Web UI](docs/screenshot.png)
-![HTTPal terminal demo](docs/demo-terminal.svg)
+![HTTPal terminal demo](docs/demo-terminal.gif)
 
 ## 60-second start
 
