@@ -1,6 +1,12 @@
 # HTTPal
 
+[![CI](https://github.com/ashusevim/HTTPal/actions/workflows/ci.yml/badge.svg)](https://github.com/ashusevim/HTTPal/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/httpal.svg)](https://www.npmjs.com/package/httpal)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](LICENSE)
+
 A lightweight, dependency-free command-line HTTP client built with TypeScript and Node 18+.
+
+![HTTPal Web UI](docs/screenshot.png)
 
 ## Features
 
@@ -22,7 +28,7 @@ A lightweight, dependency-free command-line HTTP client built with TypeScript an
 ## Installation
 
 ```bash
-git clone https://github.com/codingashishdev/httpal.git
+git clone https://github.com/ashusevim/HTTPal.git
 cd httpal
 npm install
 npm run build

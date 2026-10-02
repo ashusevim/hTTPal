@@ -33,6 +33,14 @@
   "author": "Ashish",
   "license": "ISC",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ashusevim/HTTPal.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ashusevim/HTTPal/issues"
+  },
+  "homepage": "https://github.com/ashusevim/HTTPal#readme"
   "devDependencies": {
     "@types/node": "^24.0.10",
     "typescript": "^5.8.3",
