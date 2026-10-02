@@ -3,6 +3,7 @@ import { sendRequest } from "./client.js";
 import type { CliOptions } from "./args.js";
 import { saveSnapshot, loadSnapshot } from "./snapshot.js";
 import { diffBodies } from "./diff.js";
+import { formatBody } from "./format.js";
 import { PAGE } from "./ui-page.js";
 
 
@@ -36,7 +37,7 @@ export function startUiServer(port = 4242): Promise<http.Server> {
           };
           const result = await sendRequest(options);
           res.writeHead(200, { "content-type": "application/json" });
-          res.end(JSON.stringify(result));
+          res.end(JSON.stringify({ ...result, formatted: formatBody(result, 0, true) }));
         } catch (error) {
           res.writeHead(200, { "content-type": "application/json" });
           res.end(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }));

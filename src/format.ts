@@ -1,6 +1,7 @@
 import type { HttpResult } from "./client.js";
 import type { CliOptions } from "./args.js";
 import { sanitizeBody } from "./sanitize.js";
+import { formatHtml, isHtmlLike } from "./beautify.js";
 
 /** Render a dev-tools-style timing waterfall. */
 export function renderTiming(result: HttpResult, width = 30): string {
@@ -29,6 +30,12 @@ export function formatBody(result: HttpResult, maxLines = 0, sanitize = true): s
   if (isJson(result.contentType)) {
     try {
       out = JSON.stringify(JSON.parse(trimmed), null, 2);
+    } catch {
+      out = trimmed;
+    }
+  } else if (isHtmlLike(result.contentType)) {
+    try {
+      out = formatHtml(trimmed);
     } catch {
       out = trimmed;
     }

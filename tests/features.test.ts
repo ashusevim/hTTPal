@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { sanitizeBody } from "../src/sanitize.js";
 import { diffBodies } from "../src/diff.js";
+import { formatHtml } from "../src/beautify.js";
+import { formatBody } from "../src/format.js";
 import { saveSnapshot, loadSnapshot, snapshotPath } from "../src/snapshot.js";
 import fs from "node:fs";
 import os from "node:os";
@@ -22,6 +24,31 @@ describe("sanitizeBody", () => {
 
   it("leaves clean text untouched", () => {
     expect(sanitizeBody('{"a": 1}\n')).toBe('{"a": 1}\n');
+  });
+});
+
+describe("formatHtml", () => {
+  it("indents nested tags and text", () => {
+    const out = formatHtml("<html><body><h1>Hi</h1></body></html>");
+    expect(out).toBe("<html>\n  <body>\n    <h1>\n      Hi\n    </h1>\n  </body>\n</html>");
+  });
+
+  it("does not indent void elements", () => {
+    const out = formatHtml("<div><img src=x><br><span>a</span></div>");
+    expect(out).toContain("  <img src=x>");
+    expect(out).toContain("  <br>");
+  });
+});
+
+describe("formatBody content-type routing", () => {
+  const base = { status: 200, statusText: "OK", headers: {}, durationMs: 1, redirected: false, timing: null };
+  it("formats html bodies", () => {
+    const out = formatBody({ ...base, body: "<p>hi</p>", contentType: "text/html; charset=utf-8" });
+    expect(out).toBe("<p>\n  hi\n</p>");
+  });
+  it("pretty-prints json and passes text through", () => {
+    expect(formatBody({ ...base, body: '{"a":1}', contentType: "application/json" })).toBe('{\n  "a": 1\n}');
+    expect(formatBody({ ...base, body: "plain", contentType: "text/plain" })).toBe("plain");
   });
 });
 
