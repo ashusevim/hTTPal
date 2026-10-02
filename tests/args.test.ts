@@ -92,6 +92,18 @@ describe("parseArgs", () => {
     expect(parseArgs([...base, "https://example.com"]).options?.timing).toBe(false);
   });
 
+  it("supports --target <url> as an alternative to positional URL", () => {
+    const r = parseArgs([...base, "--target", "https://example.com"]);
+    expect(r.options?.url).toBe("https://example.com");
+    const r2 = parseArgs([...base, "--target=https://example.com"]);
+    expect(r2.options?.url).toBe("https://example.com");
+  });
+
+  it("unknown option error suggests --target", () => {
+    const r = parseArgs([...base, "--bogus", "https://example.com"]);
+    expect(r.error).toMatch(/--target/);
+  });
+
   it("handles --help and --version without URL", () => {
     expect(parseArgs([...base, "--help"]).help).toBe(true);
     expect(parseArgs([...base, "--version"]).version).toBe(true);

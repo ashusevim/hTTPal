@@ -21,7 +21,7 @@ export interface ParsedArgs {
 
 const HELP = `HTTPal - a lightweight command-line HTTP client
 
-Usage: httpal [options] <url>
+Usage: httpal [options] <url>   (or: httpal [options] --target <url>)
 
 Options:
   -X, --method <method>   HTTP method (default: GET, or POST when --data is set)
@@ -77,6 +77,11 @@ export function parseArgs(argv: string[]): ParsedArgs {
   let timing = false;
   const headers: Record<string, string> = {};
   let url: string | undefined;
+  const setUrl = (u: string) => {
+    if (url !== undefined) return { error: `Unexpected extra argument: ${u}` };
+    url = u;
+    return null;
+  };
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -141,6 +146,11 @@ export function parseArgs(argv: string[]): ParsedArgs {
         case "--timing":
           timing = true;
           break;
+        case "--target": {
+          const err = setUrl(next());
+          if (err) return { ...result, error: err.error };
+          break;
+        }
         default:
           if (arg.startsWith("--method=")) method = arg.slice(9).toUpperCase();
           else if (arg.startsWith("--header=")) {
@@ -154,9 +164,18 @@ export function parseArgs(argv: string[]): ParsedArgs {
             if (!Number.isFinite(n) || n <= 0) return { ...result, error: `Invalid timeout: ${arg.slice(10)}` };
             timeout = n;
           } else if (arg.startsWith("--output=")) output = arg.slice(9);
-          else if (arg.startsWith("-") && arg !== "-") return { ...result, error: `Unknown option: ${arg}` };
-          else if (url === undefined) url = arg;
-          else return { ...result, error: `Unexpected extra argument: ${arg}` };
+          else if (arg.startsWith("--target=")) {
+            const err = setUrl(arg.slice(9));
+            if (err) return { ...result, error: err.error };
+          } else if (arg.startsWith("-") && arg !== "-")
+            return {
+              ...result,
+              error: `Unknown option: ${arg}. Pass the URL directly or via --target <url>. Run 'httpal --help' for usage.`,
+            };
+          else {
+            const err = setUrl(arg);
+            if (err) return { ...result, error: err.error };
+          }
       }
     } catch (err) {
       return { ...result, error: err instanceof Error ? err.message : String(err) };
