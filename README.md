@@ -14,6 +14,7 @@ A lightweight, dependency-free command-line HTTP client built with TypeScript an
 - `--watch <ms>` re-runs the request and shows what changed since the previous run
 - `--snapshot save|diff` records a baseline and diffs future runs (JSON-aware key diffs)
 - Response bodies are sanitized by default (ANSI/control chars stripped) — `--raw` to disable
+- `httpal ui` local web UI (request builder + response viewer with timing bar), `httpal tui` interactive mode
 - `--timeout`, `--no-follow`, `--fail`, `--output` for saving bodies to disk
 - Sensible exit codes: `0` success, `1` request/HTTP error, `2` bad arguments
 - No runtime dependencies — just `node:fetch` under the hood
@@ -40,6 +41,8 @@ httpal --fail -o user.json https://example.com/user/42
 httpal --watch 2000 https://httpbin.org/time    # re-run, show what changed
 httpal --snapshot save https://example.com      # record baseline
 httpal --snapshot diff https://example.com      # what changed since baseline?
+httpal ui --port 4242                           # web UI at http://localhost:4242
+httpal tui                                      # interactive terminal mode
 ```
 
 Run `httpal --help` for the full option list.
@@ -83,8 +86,13 @@ src/
   args.ts      argument parsing (no external deps)
   client.ts    fetch wrapper with timeout + error normalization
   format.ts    response rendering (status line, headers, JSON pretty-print)
+  diff.ts      JSON-aware structural diff for --watch and --snapshot
+  sanitize.ts  ANSI/control-char stripping for untrusted bodies
+  snapshot.ts  baseline persistence
+  ui-server.ts local web UI (zero framework, embedded page)
+  tui.ts       interactive terminal mode
   index.ts     CLI entry point
-tests/         vitest suites: unit, client integration, CLI end-to-end
+tests/         vitest suites: unit, client integration, CLI end-to-end, UI server
 ```
 
 ## Roadmap

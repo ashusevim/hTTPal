@@ -6,6 +6,7 @@ import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import type { AddressInfo } from "node:net";
+import { startUiServer } from "../src/ui-server.js";
 
 const run = promisify(execFile);
 let server: http.Server;
@@ -100,5 +101,35 @@ describe("CLI", () => {
     expect(diff.code).toBe(1);
     expect(diff.stdout).toContain("diff vs snapshot");
     await new Promise((r2) => s.close(r2));
+  });
+
+  it("ui server serves the page and proxies requests", async () => {
+    const ui = await startUiServer(0);
+    const addr = ui.address() as AddressInfo;
+    try {
+      const page = await fetch(`http://127.0.0.1:${addr.port}/`);
+      expect(page.status).toBe(200);
+      expect(await page.text()).toContain("<title>HTTPal</title>");
+
+      const api = await fetch(`http://127.0.0.1:${addr.port}/api/request`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url: base, method: "GET" }),
+      });
+      const j = await api.json();
+      expect(j.status).toBe(200);
+      expect(j.body).toContain("hello");
+      expect(j.timing).toBeTruthy();
+
+      const err = await fetch(`http://127.0.0.1:${addr.port}/api/request`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url: "http://127.0.0.1:1/" }),
+      });
+      const jerr = await err.json();
+      expect(jerr.error).toMatch(/Request failed/);
+    } finally {
+      ui.close();
+    }
   });
 });

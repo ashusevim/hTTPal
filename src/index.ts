@@ -5,6 +5,8 @@ import { sendRequest } from "./client.js";
 import { renderResult, renderTiming, statusLine, formatBody } from "./format.js";
 import { diffBodies } from "./diff.js";
 import { saveSnapshot, loadSnapshot } from "./snapshot.js";
+import { startUiServer } from "./ui-server.js";
+import { runTui } from "./tui.js";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -60,6 +62,24 @@ async function runOnce(options: NonNullable<ReturnType<typeof parseArgs>["option
 }
 
 async function main(): Promise<number> {
+  // Subcommands: `httpal ui [--port N]` and `httpal tui`
+  const sub = process.argv[2];
+  if (sub === "ui") {
+    const idx = process.argv.indexOf("--port");
+    const port = idx !== -1 ? Number(process.argv[idx + 1]) : 4242;
+    if (!Number.isFinite(port) || port <= 0) {
+      console.error("Invalid --port value");
+      return 2;
+    }
+    await startUiServer(port);
+    console.log(`HTTPal UI running at http://localhost:${port} (Ctrl+C to stop)`);
+    return await new Promise(() => {}); // keep running
+  }
+  if (sub === "tui") {
+    await runTui();
+    return 0;
+  }
+
   const parsed = parseArgs(process.argv);
   if (parsed.help) {
     console.log(getHelp());

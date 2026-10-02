@@ -31,6 +31,7 @@ Usage: httpal [options] <url>   (or: httpal [options] --target <url>)
 
 Options:
   -X, --method <method>   HTTP method (default: GET, or POST when --data is set)
+  Subcommands: 'httpal ui [--port N]' (web UI) and 'httpal tui' (interactive mode)
   -H, --header <header>   Add a header, e.g. -H "Accept: application/json" (repeatable)
   -d, --data <body>       Request body; sent as-is (use --json for JSON)
       --json <body>       Request body, sets Content-Type: application/json if unset
