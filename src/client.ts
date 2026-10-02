@@ -77,16 +77,26 @@ export async function sendRequest(options: CliOptions): Promise<HttpResult> {
       redirect: options.followRedirects ? "follow" : "manual",
       signal: controller.signal,
     });
-    const durationMs = Math.round(performance.now() - start);
+    const headersAt = performance.now();
     const body = await response.text();
+    const bodyAt = performance.now();
+    const durationMs = Math.round(bodyAt - start);
     const headers: Record<string, string> = {};
     response.headers.forEach((value, key) => {
       headers[key] = value;
     });
     const entry = await Promise.race([
       timingProbe.promise,
-      new Promise<null>((r) => setTimeout(() => r(null), 500)),
+      new Promise<null>((r) => setTimeout(() => r(null), 1500)),
     ]);
+    const fallback: TimingInfo = {
+      dns: 0,
+      connect: 0,
+      secure: 0,
+      ttfb: round(headersAt - start),
+      download: round(bodyAt - headersAt),
+      total: round(bodyAt - start),
+    };
     return {
       status: response.status,
       statusText: response.statusText,
@@ -95,7 +105,7 @@ export async function sendRequest(options: CliOptions): Promise<HttpResult> {
       contentType: response.headers.get("content-type") ?? "",
       durationMs,
       redirected: response.redirected,
-      timing: entry ? toTiming(entry) : null,
+      timing: entry ? toTiming(entry) : fallback,
     };
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
