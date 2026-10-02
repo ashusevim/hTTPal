@@ -108,6 +108,18 @@ src/
 tests/         vitest suites: unit, client integration, CLI end-to-end, UI server
 ```
 
+## Why HTTPal
+
+|             | curl | HTTPie | xh | HTTPal |
+|-------------|:----:|:------:|:--:|:------:|
+| JSON pretty-print | ✗ | ✓ | ✓ | ✓ |
+| Timing waterfall | raw flags | ✗ | ✗ | **`--timing`** |
+| Watch mode + diff | ✗ | ✗ | ✗ | **`--watch`** |
+| Snapshot regression | ✗ | ✗ | ✗ | **`--snapshot`** |
+| Web UI | ✗ | ✗ | ✗ | **`httpal ui`** |
+| Sanitizes output by default | ✗ | ✗ | ✗ | ✓ |
+| Runtime dependencies | — | Python | Rust | **none (pure Node)** |
+
 ## Roadmap
 
 - [ ] Cookie jar support
