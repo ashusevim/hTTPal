@@ -40,7 +40,7 @@
   "bugs": {
     "url": "https://github.com/ashusevim/HTTPal/issues"
   },
-  "homepage": "https://github.com/ashusevim/HTTPal#readme"
+  "homepage": "https://github.com/ashusevim/HTTPal#readme",
   "devDependencies": {
     "@types/node": "^24.0.10",
     "typescript": "^5.8.3",
